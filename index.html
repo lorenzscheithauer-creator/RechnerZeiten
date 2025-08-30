@@ -3,23 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zeit-Additions-App // Berlin-Timing Style</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        /* Import der Monospace-Schriftart für den Digital-Look */
+        /* Monospace-Schriftart */
         @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap');
         
-        /* Berlin-Timing Design */
+        /* Grund-Design */
         body {
             font-family: 'Roboto Mono', monospace;
-            background-color: #121212; /* Dunkler Hintergrund */
-            color: #e0e0e0; /* Helles Grau für Text */
+            background-color: #121212;
+            color: #e0e0e0;
         }
         .card {
-            background-color: #1e1e1e; /* Etwas hellerer Kartenhintergrund */
+            background-color: #1e1e1e;
             border-radius: 0.5rem;
             border: 1px solid #333;
-            box-shadow: 0 0 25px rgba(0, 191, 255, 0.1); /* Leichter blauer Schein */
+            box-shadow: 0 0 25px rgba(0, 191, 255, 0.1);
         }
         .btn {
             transition: all 0.2s ease-in-out;
@@ -28,11 +29,11 @@
             padding: 0.75rem 1.5rem;
             cursor: pointer;
             border: 1px solid transparent;
-            text-transform: uppercase; /* Großbuchstaben für Buttons */
+            text-transform: uppercase;
         }
         .btn-primary {
-            background-color: #00bfff; /* Deep Sky Blue */
-            color: #121212; /* Dunkler Text auf hellem Button */
+            background-color: #00bfff;
+            color: #121212;
         }
         .btn-primary:hover {
             background-color: #fff;
@@ -50,7 +51,7 @@
         }
         .btn-restart {
             background-color: transparent;
-            color: #ff4d4d; /* Leuchtendes Rot */
+            color: #ff4d4d;
             border: 1px solid #ff4d4d;
         }
         .btn-restart:hover {
@@ -77,10 +78,9 @@
             padding-top: 2rem;
         }
         #endergebnis {
-            color: #00bfff; /* Hauptakzentfarbe */
+            color: #00bfff;
             text-shadow: 0 0 10px rgba(0, 191, 255, 0.7);
         }
-        /* NEU: Styling für Operations-Buttons (+/-) */
         .op-btn {
             font-size: 1.5rem;
             font-weight: 700;
@@ -97,17 +97,32 @@
             cursor: pointer;
         }
         .op-btn:hover {
-            border-color: #ffbf00; /* Orange-Gelb für Hover */
+            border-color: #ffbf00;
         }
         .op-btn.active {
-            background-color: #ffbf00; /* Aktiver Zustand in Orange-Gelb */
+            background-color: #ffbf00;
             color: #121212;
             border-color: #ffbf00;
             box-shadow: 0 0 15px rgba(255, 191, 0, 0.5);
         }
+        /* NEU: Styling für die Uhrzeit */
+        #uhrzeit-anzeige {
+            position: fixed;
+            top: 1rem;
+            right: 1.5rem;
+            font-size: 1.1rem;
+            color: #aaa;
+            background-color: #1e1e1e;
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            border: 1px solid #333;
+            z-index: 100;
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
+
+    <div id="uhrzeit-anzeige"></div>
 
     <div class="card w-full max-w-2xl p-8">
         <h1 class="text-3xl font-bold text-center text-white mb-2">ZEITRECHNER</h1>
@@ -130,13 +145,10 @@
 
         <div id="ergebnis-container">
             <h2 class="text-2xl font-bold text-white mb-4">ZUSAMMENFASSUNG</h2>
-            
             <div class="mb-6">
                 <h3 class="text-lg font-semibold text-gray-300 mb-2">Eingaben:</h3>
-                <ul id="eingegebene-zeiten-liste" class="list-disc list-inside text-gray-400 space-y-1">
-                    </ul>
+                <ul id="eingegebene-zeiten-liste" class="list-disc list-inside text-gray-400 space-y-1"></ul>
             </div>
-
             <div>
                 <h3 class="text-lg font-semibold text-gray-300 mb-2">Gesamtzeit:</h3>
                 <p id="endergebnis" class="text-5xl font-bold bg-black p-4 rounded-md text-center"></p>
@@ -149,7 +161,7 @@
     <canvas id="confetti-canvas" class="fixed top-0 left-0 w-full h-full pointer-events-none z-50"></canvas>
 
     <script>
-        // DOM-Elemente abrufen
+        // Elemente holen
         const zeitInputsContainer = document.getElementById('zeit-inputs');
         const addTimeBtn = document.getElementById('add-time-btn');
         const calculateBtn = document.getElementById('calculate-btn');
@@ -158,19 +170,16 @@
         const eingegebeneZeitenListe = document.getElementById('eingegebene-zeiten-liste');
         const endergebnisText = document.getElementById('endergebnis');
         const confettiCanvas = document.getElementById('confetti-canvas');
-        // NEU: Operations-Buttons
         const addOpBtn = document.getElementById('add-op-btn');
         const subtractOpBtn = document.getElementById('subtract-op-btn');
+        const uhrzeitAnzeige = document.getElementById('uhrzeit-anzeige'); // Uhrzeit-Element
         
-        // Globale Variable für die aktuelle Operation
+        // Aktuelle Operation (+ oder -)
         let currentOperation = 'add'; 
 
-        const myConfetti = confetti.create(confettiCanvas, {
-            resize: true,
-            useWorker: true
-        });
+        const myConfetti = confetti.create(confettiCanvas, { resize: true, useWorker: true });
 
-        // Weitere Zeit
+        // "Weitere Zeit" Button
         addTimeBtn.addEventListener('click', () => {
             const newInput = document.createElement('input');
             newInput.type = 'text';
@@ -179,7 +188,7 @@
             zeitInputsContainer.appendChild(newInput);
         });
 
-        // NEU: Event Listeners für Operations-Buttons
+        // +/- Buttons
         addOpBtn.addEventListener('click', () => {
             currentOperation = 'add';
             addOpBtn.classList.add('active');
@@ -192,77 +201,67 @@
             addOpBtn.classList.remove('active');
         });
 
-        // Event Listener für "Berechnen" - LOGIK ANGEPASST
+        // "Berechnen" Button
         calculateBtn.addEventListener('click', () => {
             const inputs = document.querySelectorAll('.time-input');
             let processedInputs = [];
             const timeRegex = /^\d{1,}:\d{1,2}:\d{1,2}$/;
             let hasError = false;
 
-            // Alle Felder zurücksetzen
+            // Felder prüfen
             inputs.forEach((input, index) => {
-                input.style.borderColor = '#444'; 
+                input.style.borderColor = '#444';
                 if (hasError) return;
 
                 const timeValue = input.value.trim();
-                if (timeValue === '') return; 
+                if (timeValue === '') return;
 
                 if (!timeRegex.test(timeValue)) {
-                    alert(`UNGÜLTIGES FORMAT IN FELD ${index + 1}: ${timeValue}\nBITTE HH:MM:SS VERWENDEN.`);
+                    alert(`UNGÜLTIGES FORMAT IN FELD ${index + 1}`);
                     input.style.borderColor = '#ff4d4d';
                     hasError = true;
                     return;
                 }
 
-                const parts = timeValue.split(':').map(Number);
-                const [h, m, s] = parts;
-
+                const [h, m, s] = timeValue.split(':').map(Number);
                 if (m >= 60 || s >= 60) {
-                    alert(`UNGÜLTIGE MIN/SEK IN FELD ${index + 1}: ${timeValue}\nMINUTEN/SEKUNDEN DÜRFEN NICHT > 59 SEIN.`);
+                    alert(`UNGÜLTIGE MIN/SEK IN FELD ${index + 1}`);
                     input.style.borderColor = '#ff4d4d';
                     hasError = true;
                     return;
                 }
                 
-                // Gültige Eingaben speichern
+                // Gültige Zeit merken
                 processedInputs.push({
                     value: timeValue,
                     seconds: h * 3600 + m * 60 + s
                 });
             });
 
-            if (hasError) return;
-
-            if (processedInputs.length === 0) {
-                alert("BITTE MINDESTENS EINE GÜLTIGE ZEIT EINGEBEN.");
-                return;
-            }
+            if (hasError || processedInputs.length === 0) return;
 
             let totalSeconds = 0;
 
-            // Berechnungslogik
+            // Rechnen (+ oder -)
             if (currentOperation === 'add') {
                 totalSeconds = processedInputs.reduce((acc, curr) => acc + curr.seconds, 0);
-            } else { // Subtraktion
-                if (processedInputs.length < 1) return;
-
+            } else {
                 const initialSeconds = processedInputs[0].seconds;
                 const secondsToSubtract = processedInputs.slice(1).reduce((acc, curr) => acc + curr.seconds, 0);
 
                 if (secondsToSubtract > initialSeconds) {
-                    alert("FEHLER: Die Summe der abzuziehenden Zeiten ist größer als die erste Zeit.");
-                    return; // Berechnung abbrechen
+                    alert("FEHLER: Ergebnis wäre negativ.");
+                    return;
                 }
-
                 totalSeconds = initialSeconds - secondsToSubtract;
             }
 
             const finalHours = Math.floor(totalSeconds / 3600);
-            const remainingSecondsAfterHours = totalSeconds % 3600;
-            const finalMinutes = Math.floor(remainingSecondsAfterHours / 60);
-            const finalSeconds = remainingSecondsAfterHours % 60;
+            const remainingSeconds = totalSeconds % 3600;
+            const finalMinutes = Math.floor(remainingSeconds / 60);
+            const finalSeconds = remainingSeconds % 60;
             
-            // UI aktualisieren
+            // Ergebnis anzeigen
             eingegebeneZeitenListe.innerHTML = '';
             processedInputs.forEach(input => {
                 const li = document.createElement('li');
@@ -271,13 +270,11 @@
             });
             
             endergebnisText.innerHTML = `${String(finalHours).padStart(2, '0')}<span class="text-3xl font-normal text-gray-500">h</span> ${String(finalMinutes).padStart(2, '0')}<span class="text-3xl font-normal text-gray-500">m</span> ${String(finalSeconds).padStart(2, '0')}<span class="text-3xl font-normal text-gray-500">s</span>`;
-            
             ergebnisContainer.style.display = 'block';
-
             launchConfetti();
         });
 
-        // Event Listener für "Reset" - LOGIK ANGEPASST
+        // "Reset" Button
         restartBtn.addEventListener('click', () => {
             zeitInputsContainer.innerHTML = `
                 <input type="text" class="w-full time-input" placeholder="Stunde:Minute:Sekunde" value="">
@@ -285,30 +282,45 @@
             `;
             ergebnisContainer.style.display = 'none';
 
-            // Operations-Buttons auf Standard zurücksetzen
+            // +/- auf Standard
             currentOperation = 'add';
             addOpBtn.classList.add('active');
             subtractOpBtn.classList.remove('active');
         });
 
-        // Funktion für die Konfetti-Animation
+        // Konfetti-Funktion
         function launchConfetti() {
             const duration = 5 * 1000;
             const animationEnd = Date.now() + duration;
             const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0, colors: ['#00bfff', '#ffffff', '#e0e0e0'] };
+            function randomInRange(min, max) { return Math.random() * (max - min) + min; }
 
-            function randomInRange(min, max) {
-                return Math.random() * (max - min) + min;
-            }
-
-            const interval = setInterval(function() {
+            const interval = setInterval(() => {
                 const timeLeft = animationEnd - Date.now();
                 if (timeLeft <= 0) return clearInterval(interval);
                 const particleCount = 50 * (timeLeft / duration);
-                myConfetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
-                myConfetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+                myConfetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+                myConfetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
             }, 250);
         }
+
+        // NEU: Funktion für die Live-Uhrzeit
+        function updateUhrzeit() {
+            const jetzt = new Date();
+            const optionen = {
+                timeZone: 'Europe/Berlin', // Zeitzone für MESZ/MEZ
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                timeZoneName: 'short',
+            };
+            const zeitString = jetzt.toLocaleTimeString('de-DE', optionen);
+            uhrzeitAnzeige.textContent = zeitString;
+        }
+
+        // Uhr starten
+        updateUhrzeit(); // Sofortiger Aufruf
+        setInterval(updateUhrzeit, 1000); // Jede Sekunde aktualisieren
     </script>
 </body>
 </html>
